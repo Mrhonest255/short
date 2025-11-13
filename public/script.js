@@ -124,7 +124,13 @@ async function viewStats() {
     statsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     try {
-        const response = await fetch(`/api/stats/${currentShortCode}`);
+        const response = await fetch(`/api/stats/${currentShortCode}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
         const data = await response.json();
 
         if (response.ok) {

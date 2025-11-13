@@ -5,7 +5,7 @@ const Database = require('better-sqlite3');
 const { nanoid } = require('nanoid');
 const QRCode = require('qrcode');
 const path = require('path');
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -75,7 +75,11 @@ function isValidUrl(string) {
 }
 
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+  return bcrypt.hashSync(password, 10);
+}
+
+function verifyPassword(password, hash) {
+  return bcrypt.compareSync(password, hash);
 }
 
 function generateShortCode() {
@@ -123,9 +127,9 @@ app.post('/api/shorten', (req, res) => {
 });
 
 // Get URL statistics
-app.get('/api/stats/:shortCode', (req, res) => {
+app.post('/api/stats/:shortCode', (req, res) => {
   const { shortCode } = req.params;
-  const { password } = req.query;
+  const { password } = req.body;
 
   const urlData = db.prepare('SELECT * FROM urls WHERE short_code = ? OR custom_alias = ?').get(shortCode, shortCode);
 
@@ -134,7 +138,7 @@ app.get('/api/stats/:shortCode', (req, res) => {
   }
 
   // Check password if protected
-  if (urlData.password_hash && (!password || hashPassword(password) !== urlData.password_hash)) {
+  if (urlData.password_hash && (!password || !verifyPassword(password, urlData.password_hash))) {
     return res.status(401).json({ error: 'Password required or incorrect' });
   }
 
@@ -180,10 +184,56 @@ app.get('/api/qr/:shortCode', async (req, res) => {
   }
 });
 
+// Verify password and redirect
+app.post('/api/verify/:shortCode', (req, res) => {
+  const { shortCode } = req.params;
+  const { password } = req.body;
+
+  const urlData = db.prepare('SELECT * FROM urls WHERE short_code = ? OR custom_alias = ?').get(shortCode, shortCode);
+
+  if (!urlData) {
+    return res.status(404).json({ error: 'URL not found' });
+  }
+
+  // Check if expired
+  if (urlData.expires_at && urlData.expires_at < Date.now()) {
+    return res.status(410).json({ error: 'This link has expired' });
+  }
+
+  // Check password
+  if (!urlData.password_hash || !verifyPassword(password, urlData.password_hash)) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  // Record click
+  try {
+    db.prepare(`
+      INSERT INTO clicks (short_code, clicked_at, ip_address, user_agent, referer)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      urlData.short_code,
+      Date.now(),
+      req.ip,
+      req.get('user-agent'),
+      req.get('referer') || null
+    );
+
+    // Update click count
+    db.prepare(`
+      UPDATE urls
+      SET click_count = click_count + 1, last_accessed = ?
+      WHERE short_code = ?
+    `).run(Date.now(), urlData.short_code);
+  } catch (error) {
+    console.error('Failed to record click:', error);
+  }
+
+  res.json({ success: true, url: urlData.original_url });
+});
+
 // Redirect to original URL
 app.get('/:shortCode', (req, res) => {
   const { shortCode } = req.params;
-  const { password } = req.query;
 
   const urlData = db.prepare('SELECT * FROM urls WHERE short_code = ? OR custom_alias = ?').get(shortCode, shortCode);
 
@@ -198,9 +248,7 @@ app.get('/:shortCode', (req, res) => {
 
   // Check password if protected
   if (urlData.password_hash) {
-    if (!password || hashPassword(password) !== urlData.password_hash) {
-      return res.status(401).sendFile(path.join(__dirname, 'public', 'password.html'));
-    }
+    return res.status(401).sendFile(path.join(__dirname, 'public', 'password.html'));
   }
 
   // Record click
