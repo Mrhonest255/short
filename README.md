@@ -93,7 +93,14 @@ Response:
 
 ### Get Statistics
 
-**GET** `/api/stats/:shortCode?password=secret`
+**POST** `/api/stats/:shortCode`
+
+Request body (for password-protected URLs):
+```json
+{
+  "password": "secret123"
+}
+```
 
 Response:
 ```json
@@ -106,6 +113,25 @@ Response:
   "clickCount": 42,
   "lastAccessed": 1699974000000,
   "recentClicks": [...]
+}
+```
+
+### Verify Password and Redirect
+
+**POST** `/api/verify/:shortCode`
+
+Request body:
+```json
+{
+  "password": "secret123"
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "url": "https://example.com/very-long-url"
 }
 ```
 
@@ -122,9 +148,9 @@ Response:
 
 ### Redirect to Original URL
 
-**GET** `/:shortCode?password=secret`
+**GET** `/:shortCode`
 
-Redirects to the original URL after recording the click.
+Redirects to the original URL after recording the click. If the URL is password-protected, returns a password entry page.
 
 ## 🛠️ Technology Stack
 
@@ -154,10 +180,12 @@ short/
 ## 🔒 Security Features
 
 - **Rate Limiting**: Prevents abuse with 100 requests per 15 minutes per IP
-- **Helmet.js**: Sets security HTTP headers
-- **Password Hashing**: SHA-256 hashing for password-protected links
+- **Helmet.js**: Sets security HTTP headers including Content Security Policy
+- **Secure Password Hashing**: Uses bcrypt with 10 salt rounds for password-protected links
+- **POST for Sensitive Data**: Passwords transmitted via POST body, not GET query parameters
 - **Input Validation**: URL validation and sanitization
 - **CSP**: Content Security Policy to prevent XSS attacks
+- **No Inline Scripts**: All JavaScript in external files to comply with CSP
 
 ## 🌐 Deployment
 
