@@ -2,6 +2,8 @@
 
 A next-generation URL shortening service with advanced features including analytics, QR codes, password protection, and custom aliases. Built for the future with modern web technologies.
 
+> **⚠️ Deployment Note:** This app uses SQLite and is **NOT compatible with Vercel** serverless deployments. See [DEPLOYMENT.md](DEPLOYMENT.md) for recommended platforms like Railway, Render, or traditional VPS hosting.
+
 ## ✨ Features
 
 - **🔗 Custom Short Links**: Create memorable, branded short URLs with custom aliases
@@ -188,6 +190,25 @@ short/
 - **No Inline Scripts**: All JavaScript in external files to comply with CSP
 
 ## 🌐 Deployment
+
+> **⚠️ Important:** This application uses SQLite which requires persistent file storage and is **NOT compatible with Vercel** or other serverless platforms that don't support native modules.
+
+### ✅ Recommended Platforms
+
+1. **Railway** (Recommended) - [Deploy Guide](DEPLOYMENT.md#1-railway-recommended)
+   - Supports SQLite out of the box
+   - Free tier available
+   - One-click deployment
+
+2. **Render** - [Deploy Guide](DEPLOYMENT.md#2-render)
+   - Persistent disk support
+   - Free tier available
+
+3. **DigitalOcean/VPS** - [Deploy Guide](DEPLOYMENT.md#5-vps-deployment-digitalocean-linode-aws-ec2)
+   - Full control
+   - Best for production
+
+**📖 See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions and platform comparisons.**
 
 ### Environment Variables
 

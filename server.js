@@ -282,11 +282,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Advanced URL Shortener running on port ${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to get started`);
-});
+// Start server (only when not running in Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Advanced URL Shortener running on port ${PORT}`);
+    console.log(`Visit http://localhost:${PORT} to get started`);
+  });
+}
+
+// Export for Vercel
+module.exports = app;
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
