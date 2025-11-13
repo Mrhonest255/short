@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Link Not Found</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-icon {
+            font-size: 8rem;
+            margin-bottom: 20px;
+        }
+        .error-code {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .error-message {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🔍</div>
+        <div class="error-code">404</div>
+        <div class="error-message">Link Not Found</div>
+        <p style="color: var(--text-muted); max-width: 500px;">
+            The link you're looking for doesn't exist or may have been removed.
+        </p>
+        <a href="/" class="btn btn-primary" style="margin-top: 30px; display: inline-block; text-decoration: none;">
+            🏠 Go Home
+        </a>
+    </div>
+</body>
+</html>
